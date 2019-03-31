@@ -2,6 +2,7 @@ import sys
 import os
 import six
 import re
+import io
 import signal
 import socket
 import subprocess
@@ -71,10 +72,9 @@ class Subprocess(object):
         signal.alarm(self.process_timeout)
         result = ""
         try:
-            self.process.stdin.write(sentence.encode('utf-8')+six.b('\n'))
-            self.process.stdin.flush()
-            while True:
-                line = self.process.stdout.readline().rstrip().decode('utf-8')
+            outs, _ = self.process.communicate(sentence.encode('utf-8')+six.b('\n'))
+            for line in io.StringIO(outs.decode('utf-8')):
+                line = line.rstrip()
                 if re.search(pattern, line):
                     break
                 result = "%s%s\n" % (result, line)
