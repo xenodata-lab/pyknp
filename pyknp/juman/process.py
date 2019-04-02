@@ -42,6 +42,8 @@ class Subprocess(object):
         subproc_args = {'stdin': subprocess.PIPE, 'stdout': subprocess.PIPE,
                 'stderr': subprocess.STDOUT, 'cwd': '.',
                 'close_fds': sys.platform != "win32"}
+    
+    def start_process():
         try:
             env = os.environ.copy()
             self.process = subprocess.Popen(command, env=env, **subproc_args)
@@ -51,6 +53,9 @@ class Subprocess(object):
             raise
 
     def __del__(self):
+        close_process()
+    
+    def close_process(self):
         self.process.stdin.close()
         self.process.stdout.close()
         try:
@@ -72,12 +77,14 @@ class Subprocess(object):
         signal.alarm(self.process_timeout)
         result = ""
         try:
+            self.start_process()
             outs, _ = self.process.communicate(sentence.encode('utf-8')+six.b('\n'))
             for line in io.StringIO(outs.decode('utf-8')):
                 line = line.rstrip()
                 if re.search(pattern, line):
                     break
                 result = "%s%s\n" % (result, line)
+            self.close_process()
         finally:
             signal.alarm(0)
         return result
